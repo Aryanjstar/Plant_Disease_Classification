@@ -3,84 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plant Disease Classification Model - Home</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: url('https://images.pexels.com/photos/807598/pexels-photo-807598.jpeg?auto=compress&cs=tinysrgb&w=600') no-repeat center center fixed;
-            background-size: cover;
-            font-family: Arial, sans-serif;
-        }
-        .navbar {
-            overflow: hidden;
-            background-color: #333;
-        }
-        .navbar a {
-            float: left;
-            display: block;
-            color: white;
-            text-align: center;
-            padding: 14px 20px;
-            text-decoration: none;
-        }
-        .navbar a:hover {
-            background-color: #ddd;
-            color: black;
-        }
-        .navbar .right {
-            float: right;
-        }
-        .content {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.8);
-            margin: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .content ol {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        .content ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-    </style>
+    <title>Plant Disease Classification - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="navbar">
-        <a href="{{ url_for('home') }}">Home</a>
-        <a href="{{ url_for('disease_recognition') }}">Disease Recognition</a>
-        <a href="{{ url_for('logout') }}" class="right">Logout</a>
+        <a href="{{ url_for('home') }}" class="navbar-logo">{{ t('app_name') }}</a>
+        <div class="navbar-links">
+            <a href="{{ url_for('home') }}">{{ t('home') }}</a>
+            <a href="{{ url_for('disease_recognition') }}">{{ t('disease_recognition') }}</a>
+            <a href="{{ url_for('logout') }}" class="right">{{ t('logout') }}</a>
+        </div>
     </div>
     <div class="content">
-        <h1>Welcome to the Plant Disease Recognition System! 🌿🔍</h1>
-        <p>Our mission is to help in identifying plant diseases efficiently. Upload an image of a plant, and our system will analyze it to detect any signs of diseases. Together, let's protect our crops and ensure a healthier harvest!</p>
-        <h2>How It Works</h2>
-        <div>
-            <p>Upload Image: Go to the Disease Recognition page and upload an image of a plant with suspected diseases.</p>
-            <p>Analysis: Our system will process the image using advanced algorithms to identify potential diseases.</p>
-            <p>Results: View the results and recommendations for further action.</p>
+        <div class="card">
+            <h1>{{ t('welcome_title') }}</h1>
+            <p style="font-size: 1.1rem; color: var(--text-light); margin-bottom: 32px;">
+                {{ t('welcome_message') }}
+            </p>
+            
+            <h2>{{ t('how_it_works') }}</h2>
+            <div style="margin: 24px 0;">
+                <div class="tip-item">
+                    <span class="tip-icon">📤</span>
+                    <div class="tip-text">
+                        <strong>{{ t('upload_image') }}</strong> {{ t('upload_image_desc') }}
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">🤖</span>
+                    <div class="tip-text">
+                        <strong>{{ t('analysis') }}</strong> {{ t('analysis_desc') }}
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">📊</span>
+                    <div class="tip-text">
+                        <strong>{{ t('results') }}</strong> {{ t('results_desc') }}
+                    </div>
+                </div>
+            </div>
+
+            <h2>{{ t('features') }}</h2>
+            <ul class="feature-list">
+                <li>{{ t('feature1') }}</li>
+                <li>{{ t('feature2') }}</li>
+                <li>{{ t('feature3') }}</li>
+            </ul>
+
+            <h2>{{ t('supported_plants') }}</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 24px;">
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🫑 Bell Pepper</div>
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🌿 Cassava</div>
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🌽 Corn</div>
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🍇 Grape</div>
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🥭 Mango</div>
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🥔 Potato</div>
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🌾 Rice</div>
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🌹 Rose</div>
+                <div style="background: var(--bg-offwhite); padding: 16px; border-radius: 12px; text-align: center; font-weight: 600; color: var(--primary-green);">🍅 Tomato</div>
+            </div>
+
+            <div style="margin-top: 32px; text-align: center;">
+                <a href="{{ url_for('disease_recognition') }}" class="btn-primary" style="text-decoration: none; display: inline-flex;">
+                    {{ t('start_detection') }}
+                </a>
+            </div>
         </div>
-        <h2>Our Features</h2>
-        <ol>
-            <li>High Accuracy: Our model is trained on a large dataset to ensure high accuracy in disease detection.</li>
-            <li>Easy to Use: Upload an image and get results in seconds.</li>
-            <li>Secure: Your data is safe with us. We prioritize your privacy.</li>
-        </ol>
-        <h2>Supported Plants</h2>
-        <ul>
-            <li>Bell Pepper</li>
-            <li>Cassava</li>
-            <li>Corn</li>
-            <li>Grape</li>
-            <li>Mango</li>
-            <li>Potato</li>
-            <li>Rice</li>
-            <li>Rose</li>
-            <li>Tomato</li>
-        </ul>
     </div>
 </body>
 </html>

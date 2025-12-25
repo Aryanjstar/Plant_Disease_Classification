@@ -1,0 +1,545 @@
+/* Modern Agricultural Theme - Shared Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-green: #2D5A27;
+    --accent-gold: #D4A373;
+    --bg-offwhite: #F8F9FA;
+    --text-dark: #1A1A1A;
+    --text-light: #666666;
+    --success-green: #4CAF50;
+    --danger-red: #E53935;
+    --border-radius: 16px;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-offwhite);
+    color: var(--text-dark);
+    line-height: 1.6;
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Sticky Navigation Bar */
+.navbar {
+    position: sticky;
+    top: 0;
+    background: var(--primary-green);
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+}
+
+.navbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 1.25rem;
+    text-decoration: none;
+}
+
+.navbar-logo::before {
+    content: '🌱';
+    font-size: 1.5rem;
+}
+
+.navbar-links {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.navbar a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.navbar .right {
+    margin-left: auto;
+}
+
+/* Language Toggle */
+.lang-toggle {
+    display: flex;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px;
+    border-radius: 8px;
+    margin-right: 16px;
+}
+
+.lang-toggle button {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.lang-toggle button.active {
+    background: var(--accent-gold);
+    color: var(--primary-green);
+}
+
+.lang-toggle button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+/* Card-Based Layout */
+.card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    margin: 24px auto;
+    max-width: 900px;
+    animation: fadeIn 0.6s ease-in;
+}
+
+.card h1 {
+    color: var(--primary-green);
+    margin-bottom: 24px;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.card h2 {
+    color: var(--primary-green);
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Large Buttons with Icons */
+.btn-primary {
+    background: var(--primary-green);
+    color: white;
+    border: none;
+    padding: 18px 36px;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    min-height: 56px;
+}
+
+.btn-primary::before {
+    content: '📷';
+    font-size: 1.5rem;
+}
+
+.btn-primary:hover {
+    background: #1e3d1a;
+    transform: scale(1.05);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-submit {
+    background: var(--accent-gold);
+    color: var(--primary-green);
+    border: none;
+    padding: 18px 36px;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    min-height: 56px;
+    width: 100%;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.btn-submit::before {
+    content: '🔍';
+    font-size: 1.5rem;
+}
+
+.btn-submit:hover {
+    background: #c8955f;
+    transform: scale(1.02);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Upload Container */
+.upload-container {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    margin-top: 24px;
+}
+
+.upload-container input[type="file"] {
+    width: 100%;
+    padding: 16px;
+    border: 2px dashed var(--accent-gold);
+    border-radius: var(--border-radius);
+    background: var(--bg-offwhite);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 16px;
+}
+
+.upload-container input[type="file"]:hover {
+    border-color: var(--primary-green);
+    background: #f0f4f0;
+}
+
+/* Scanning Animation */
+.scan-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    margin: 24px 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.scan-line {
+    width: 100%;
+    height: 3px;
+    background: #4AF2A1;
+    position: absolute;
+    top: 0;
+    box-shadow: 0 0 15px #4AF2A1;
+    animation: scanAnimation 2s linear infinite;
+    z-index: 5;
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+
+.scan-line.stopped {
+    animation: none;
+    opacity: 0;
+}
+
+@keyframes scanAnimation {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+
+.scan-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: var(--border-radius);
+    max-height: 500px;
+    object-fit: contain;
+    margin: 0 auto;
+}
+
+/* Health Report Style Results */
+.health-report {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    margin: 24px 0;
+}
+
+.disease-badge {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 24px;
+}
+
+.disease-badge.infected {
+    background: #FFEBEE;
+    color: var(--danger-red);
+    border: 2px solid var(--danger-red);
+}
+
+.disease-badge.healthy {
+    background: #E8F5E9;
+    color: var(--success-green);
+    border: 2px solid var(--success-green);
+}
+
+/* Tabs for Fertilizer and Tips */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--bg-offwhite);
+}
+
+.tab-button {
+    background: transparent;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    top: 2px;
+}
+
+.tab-button.active {
+    color: var(--primary-green);
+    border-bottom-color: var(--accent-gold);
+}
+
+.tab-button:hover {
+    color: var(--primary-green);
+}
+
+.tab-content {
+    display: none;
+    padding: 20px 0;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-offwhite);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.tip-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.tip-text {
+    flex: 1;
+    color: var(--text-dark);
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+.tip-text strong {
+    color: var(--primary-green);
+    font-weight: 600;
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #E0E0E0;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.1);
+}
+
+/* Content Container */
+.content {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* List Styling */
+.feature-list {
+    list-style: none;
+    padding: 0;
+}
+
+.feature-list li {
+    padding: 16px;
+    margin-bottom: 12px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.feature-list li::before {
+    content: '✓';
+    background: var(--success-green);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+    .navbar {
+        padding: 12px 16px;
+        position: relative;
+    }
+
+    .navbar-logo {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 12px 16px;
+    }
+
+    .navbar-logo {
+        font-size: 0.95rem;
+    }
+
+    .card {
+        padding: 20px;
+        margin: 16px;
+        width: 95%;
+    }
+
+    .card h1 {
+        font-size: 1.5rem;
+    }
+
+    .btn-primary,
+    .btn-submit {
+        padding: 14px 28px;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-button {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .content {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 16px;
+        margin: 12px;
+    }
+
+    .navbar-logo {
+        font-size: 1rem;
+    }
+
+    .lang-toggle {
+        margin-right: 8px;
+    }
+
+    .lang-toggle button {
+        padding: 4px 8px;
+        font-size: 0.85rem;
+    }
+}
+
+/* High Contrast for Readability */
+.high-contrast {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* Loading State */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+

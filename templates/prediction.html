@@ -4,76 +4,167 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plant Disease Prediction Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: url('https://images.pexels.com/photos/807598/pexels-photo-807598.jpeg?auto=compress&cs=tinysrgb&w=600') no-repeat center center fixed;
-            background-size: cover;
-            font-family: Arial, sans-serif;
+        .health-report-header {
+            text-align: center;
+            margin-bottom: 32px;
         }
-        .navbar {
+        .disease-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .scan-container {
+            position: relative;
             overflow: hidden;
-            background-color: #333;
+            border-radius: var(--border-radius);
+            margin: 24px 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
-        .navbar a {
-            float: left;
-            display: block;
-            color: white;
-            text-align: center;
-            padding: 14px 20px;
-            text-decoration: none;
-        }
-        .navbar a:hover {
-            background-color: #ddd;
-            color: black;
-        }
-        .navbar .right {
-            float: right;
-        }
-        .content {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.8);
-            margin: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .prediction-result {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            margin-top: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .prediction-result h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .prediction-result img {
-            max-width: 100%;
+        .scan-container img {
+            width: 100%;
             height: auto;
-            border-radius: 10px;
-            margin-top: 20px;
             display: block;
+            border-radius: var(--border-radius);
+            max-height: 500px;
+            object-fit: contain;
+        }
+        .scan-line {
+            width: 100%;
+            height: 3px;
+            background: #4AF2A1;
+            position: absolute;
+            top: 0;
+            box-shadow: 0 0 15px #4AF2A1;
+            animation: scanAnimation 2s linear infinite;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .scan-line.active {
+            opacity: 1;
+        }
+        .scan-line.stopped {
+            animation: none;
+            opacity: 0;
+        }
+        @keyframes scanAnimation {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <a href="{{ url_for('home') }}">Home</a>
-        <a href="{{ url_for('disease_recognition') }}">Disease Recognition</a>
-        <a href="{{ url_for('logout') }}" class="right">Logout</a>
-    </div>
-    <div class="content">
-        <h1>Plant Disease Prediction Result</h1>
-        <div class="prediction-result">
-            <h2>Predicted Disease: {{ predicted_disease }}</h2>
-            <img src="{{ image_url }}" alt="Uploaded Image">
+        <a href="{{ url_for('home') }}" class="navbar-logo">{{ t('app_name') }}</a>
+        <div class="navbar-links">
+            <a href="{{ url_for('home') }}">{{ t('home') }}</a>
+            <a href="{{ url_for('disease_recognition') }}">{{ t('disease_recognition') }}</a>
+            <a href="{{ url_for('logout') }}" class="right">{{ t('logout') }}</a>
         </div>
     </div>
+    <div class="content">
+        <div class="card">
+            <div class="health-report-header">
+                <h1>🌿 {{ t('health_report') }}</h1>
+                <div class="disease-name">
+                    <span class="disease-badge {% if 'healthy' in predicted_disease.lower() %}healthy{% else %}infected{% endif %}">
+                        {{ predicted_disease }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="scan-container">
+                <div class="scan-line active" id="scanLine"></div>
+                <img src="{{ image_url }}" alt="Uploaded Plant Image" id="plantImage" onload="stopScanAnimation()">
+            </div>
+
+            <div class="health-report" style="margin-top: 32px;">
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab('fertilizer')">
+                        🌾 {{ t('fertilizer_recommendations') }}
+                    </button>
+                    <button class="tab-button" onclick="switchTab('tips')">
+                        💡 {{ t('treatment_tips') }}
+                    </button>
+                </div>
+
+                <div id="fertilizer-tab" class="tab-content active">
+                    <div class="tip-item">
+                        <span class="tip-icon">🌾</span>
+                        <div class="tip-text">
+                            <strong>{{ t('fertilizer') }}</strong> {{ fertilizer or t('no_fertilizer') }}
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tips-tab" class="tab-content">
+                    <div class="tip-item">
+                        <span class="tip-icon">💡</span>
+                        <div class="tip-text">
+                            <strong>{{ t('tip') }}</strong> {{ tips or t('no_tips') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 32px; text-align: center;">
+                <a href="{{ url_for('disease_recognition') }}" class="btn-primary" style="text-decoration: none; display: inline-flex;">
+                    {{ t('analyze_another') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Find and activate the clicked button
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => {
+                if ((tabName === 'fertilizer' && btn.textContent.includes('Fertilizer')) ||
+                    (tabName === 'tips' && btn.textContent.includes('Tips'))) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Stop scanning animation after image loads or after 3 seconds
+        function stopScanAnimation() {
+            const scanLine = document.getElementById('scanLine');
+            if (scanLine) {
+                // Stop animation after a short delay to show it once
+                setTimeout(() => {
+                    scanLine.classList.remove('active');
+                    scanLine.classList.add('stopped');
+                }, 2000); // Stop after 2 seconds (one full scan cycle)
+            }
+        }
+
+        // Also stop animation if image fails to load or after page load
+        window.addEventListener('load', function() {
+            setTimeout(stopScanAnimation, 3000);
+        });
+
+        // Stop immediately if image is already loaded
+        const plantImage = document.getElementById('plantImage');
+        if (plantImage && plantImage.complete) {
+            stopScanAnimation();
+        }
+    </script>
 </body>
 </html>

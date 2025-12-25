@@ -2,86 +2,982 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Plant Disease Recognition</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: url('https://images.pexels.com/photos/807598/pexels-photo-807598.jpeg?auto=compress&cs=tinysrgb&w=600') no-repeat center center fixed;
-            background-size: cover;
-            font-family: Arial, sans-serif;
-        }
-        .navbar {
+        .camera-container {
+            display: none;
+            position: relative;
+            background: #000;
+            border-radius: var(--border-radius);
             overflow: hidden;
-            background-color: #333;
+            margin-bottom: 24px;
         }
-        .navbar a {
-            float: left;
+        .camera-container.active {
             display: block;
-            color: white;
-            text-align: center;
-            padding: 14px 20px;
-            text-decoration: none;
         }
-        .navbar a:hover {
-            background-color: #ddd;
-            color: black;
+        #video {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            display: block;
         }
-        .navbar .right {
-            float: right;
+        .viewfinder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 400px;
+            aspect-ratio: 1;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
         }
-        .content {
+        .viewfinder::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 2px solid var(--accent-gold);
+            border-radius: 12px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        .camera-controls {
+            display: flex;
+            gap: 12px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.8);
-            margin: 20px;
-            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .camera-btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        .btn-capture {
+            background: var(--accent-gold);
+            color: var(--primary-green);
+            min-width: 140px;
+            justify-content: center;
+        }
+        .btn-capture:hover {
+            background: #c8955f;
+            transform: scale(1.05);
+        }
+        .btn-switch {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .btn-switch:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .btn-retake, .btn-use {
+            background: white;
+            color: var(--primary-green);
+        }
+        .btn-retake:hover, .btn-use:hover {
+            background: var(--bg-offwhite);
+        }
+        .captured-preview {
+            display: none;
+            margin-bottom: 24px;
+        }
+        .captured-preview.active {
+            display: block;
+        }
+        .captured-preview img {
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        .shutter-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transition: opacity 0.1s;
+        }
+        .shutter-flash.active {
+            opacity: 0.8;
+            transition: opacity 0.1s;
+        }
+        .camera-instructions {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 0.9rem;
             text-align: center;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            pointer-events: none;
+        }
+        #canvas {
+            display: none;
         }
         .upload-container {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-            box-sizing: border-box;
-        }
-        .upload-container input[type="file"] {
             display: block;
-            margin: 10px 0;
+        }
+        .upload-container.hidden {
+            display: none;
+        }
+        .error-message {
+            background: #FFEBEE;
+            color: #C62828;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .error-message.active {
+            display: block;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: currentColor;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Hamburger Menu */
+        .hamburger-menu {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+        .hamburger-menu span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        .hamburger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+        .hamburger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        /* Main Container for Responsive Layout */
+        .main-content-wrapper {
             width: 100%;
         }
-        .upload-container button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
+
+        /* Two Column Layout - Default for Laptop */
+        .input-methods-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
         }
-        .upload-container button:hover {
-            background-color: #45a049;
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 991px) {
+            /* Body and HTML adjustments */
+            body {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
+            html {
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            /* Show hamburger menu on mobile */
+            .hamburger-menu {
+                display: flex;
+            }
+
+            /* Navbar adjustments */
+            .navbar {
+                padding: 10px 12px;
+                min-height: 50px;
+                position: sticky;
+                top: 0;
+            }
+
+            /* Add padding to body when menu is open to prevent content jump */
+            body.menu-open {
+                overflow: hidden;
+            }
+
+            .navbar-logo {
+                font-size: 0.9rem;
+                flex: 1;
+            }
+
+            /* Hide navbar links by default on mobile */
+            .navbar-links {
+                position: fixed;
+                top: 50px;
+                left: -100%;
+                width: 100%;
+                max-height: calc(100vh - 50px);
+                overflow-y: auto;
+                background: var(--primary-green);
+                flex-direction: column;
+                padding: 20px;
+                transition: left 0.3s ease;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+            }
+
+            .navbar-links.active {
+                left: 0;
+            }
+
+            .navbar-links a {
+                width: 100%;
+                padding: 16px;
+                text-align: left;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                margin: 0;
+            }
+
+            .navbar-links a.right {
+                float: none;
+                margin-left: 0;
+            }
+
+            /* Content adjustments */
+            .content {
+                padding: 8px;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+            }
+
+            /* Stack layout on mobile */
+            .input-methods-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+
+            /* Full width on mobile */
+            .card {
+                width: 100%;
+                max-width: 100%;
+                margin: 8px 0;
+                padding: 16px;
+                box-sizing: border-box;
+            }
+
+            /* Title adjustments */
+            .card h1 {
+                font-size: 1.4rem;
+                margin-bottom: 16px;
+                line-height: 1.3;
+            }
+
+            .card p {
+                font-size: 1rem;
+                margin-bottom: 20px;
+                line-height: 1.5;
+            }
+
+            /* Larger buttons for mobile */
+            .btn-primary, .btn-submit, .camera-btn {
+                min-height: 50px;
+                padding: 14px 20px;
+                font-size: 1rem;
+                width: 100%;
+                box-sizing: border-box;
+                margin-bottom: 12px;
+            }
+
+            /* Larger touch targets */
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-group input[type="file"] {
+                padding: 16px;
+                min-height: 50px;
+                box-sizing: border-box;
+                width: 100%;
+            }
+
+            .form-group label {
+                font-size: 0.95rem;
+                margin-bottom: 8px;
+            }
+
+            /* Upload container adjustments */
+            .upload-container {
+                width: 100%;
+                padding: 16px;
+                box-sizing: border-box;
+                margin: 0;
+            }
+
+            .upload-container h3 {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+
+            /* Camera section adjustments */
+            .camera-container {
+                width: 100%;
+                margin: 0 0 16px 0;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            #video {
+                width: 100%;
+                max-height: 50vh;
+                object-fit: contain;
+                display: block;
+            }
+
+            .camera-instructions {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+                bottom: 90px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 90%;
+                max-width: 300px;
+            }
+
+            .viewfinder {
+                width: 75%;
+                max-width: 300px;
+            }
+
+            .camera-controls {
+                flex-direction: column;
+                gap: 10px;
+                padding: 16px;
+            }
+
+            .camera-btn {
+                width: 100%;
+                min-height: 50px;
+                box-sizing: border-box;
+            }
+
+            /* Captured preview adjustments */
+            .captured-preview {
+                width: 100%;
+                box-sizing: border-box;
+                margin-top: 16px;
+            }
+
+            .captured-preview img {
+                width: 100%;
+                max-height: 50vh;
+                object-fit: contain;
+                display: block;
+            }
+
+            .captured-preview h3 {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+
+            /* Instructions section */
+            .instructions-section {
+                padding: 16px !important;
+                margin-top: 20px !important;
+                box-sizing: border-box;
+            }
+
+            .instructions-section h3 {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+
+            .instructions-section ul {
+                margin: 0;
+                padding: 0;
+            }
+
+            .instructions-section li {
+                padding: 10px 0;
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+
+            /* Error message */
+            .error-message {
+                padding: 12px;
+                font-size: 0.9rem;
+                margin-bottom: 12px;
+            }
+
+            /* Text sizing for mobile */
+            h2 {
+                font-size: 1.2rem;
+            }
+
+            h3 {
+                font-size: 1.1rem;
+            }
+
+            /* High contrast for mobile readability */
+            .card {
+                background: white;
+                color: var(--text-dark);
+            }
+
+            h1, h2, h3 {
+                color: var(--primary-green);
+            }
+
+            /* Ensure no horizontal overflow */
+            * {
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            /* Spacing adjustments */
+            .card > * {
+                margin-bottom: 16px;
+            }
+
+            .card > *:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        /* Laptop Mode (992px and above) */
+        @media (min-width: 992px) {
+            .navbar-links {
+                display: flex;
+                position: static;
+                width: auto;
+                background: transparent;
+                padding: 0;
+                box-shadow: none;
+            }
+
+            .navbar-links a {
+                width: auto;
+                padding: 10px 20px;
+                border-bottom: none;
+            }
+
+            .hamburger-menu {
+                display: none;
+            }
+
+            .input-methods-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .card {
+                max-width: 1200px;
+            }
+        }
+
+        /* Prevent horizontal scroll */
+        body {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        html {
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        img, video {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .card {
+                padding: 12px;
+                margin: 4px 0;
+            }
+
+            .card h1 {
+                font-size: 1.2rem;
+            }
+
+            .content {
+                padding: 4px;
+            }
+
+            .btn-primary, .btn-submit, .camera-btn {
+                padding: 12px 16px;
+                font-size: 0.95rem;
+            }
+
+            .upload-container {
+                padding: 12px;
+            }
+
+            .instructions-section {
+                padding: 12px !important;
+            }
+
+            #video {
+                max-height: 45vh;
+            }
+
+            .captured-preview img {
+                max-height: 45vh;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="shutter-flash" id="shutterFlash"></div>
     <div class="navbar">
-        <a href="/home">Home</a>
-        <a href="/disease-recognition">Disease Recognition</a>
-        <a href="/logout" class="right">Logout</a>
-    </div>
-    <div class="content">
-        <h1>Plant Disease Recognition</h1>
-        <div class="upload-container">
-            <h2>Upload an Image</h2>
-            <form action="{{ url_for('disease_recognition') }}" method="post" enctype="multipart/form-data">
-                <input type="file" name="file" accept="image/*" required>
-                <button type="submit">Predict</button>
-            </form>
+        <a href="{{ url_for('home') }}" class="navbar-logo">{{ t('app_name') }}</a>
+        <button class="hamburger-menu" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="navbar-links" id="navbarLinks">
+            <a href="{{ url_for('home') }}">{{ t('home') }}</a>
+            <a href="{{ url_for('disease_recognition') }}">{{ t('disease_recognition') }}</a>
+            <a href="{{ url_for('logout') }}" class="right">{{ t('logout') }}</a>
         </div>
     </div>
+    <div class="content">
+        <div class="card">
+            <h1>{{ t('disease_recognition_title') }}</h1>
+            <p style="font-size: 1.1rem; color: var(--text-light); margin-bottom: 32px;">
+                {{ t('disease_recognition_desc') }}
+            </p>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <!-- Two Column Layout for Upload and Camera -->
+            <div class="input-methods-grid">
+                <!-- Upload Method -->
+                <div class="upload-container" style="margin: 0;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        <span>📁</span>
+                        <span>{{ t('upload_image') }}</span>
+                    </h3>
+                    <form action="{{ url_for('disease_recognition') }}" method="post" enctype="multipart/form-data" id="uploadForm" onsubmit="return validateUploadForm(event)">
+                        <div class="form-group">
+                            <label for="file" style="display: block; margin-bottom: 12px; font-weight: 600; color: var(--text-dark);">
+                                {{ t('select_image') }}
+                            </label>
+                            <input type="file" id="file" name="file" accept="image/*" required style="width: 100%; padding: 12px; border: 2px dashed var(--accent-gold); border-radius: 12px; background: var(--bg-offwhite); cursor: pointer;">
+                        </div>
+                        <button type="submit" class="btn-submit" id="submitBtn" style="width: 100%; margin-top: 16px;">
+                            {{ t('analyze') }}
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Camera Method -->
+                <div style="background: white; border-radius: var(--border-radius); padding: 24px; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--primary-green); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        <span>📷</span>
+                        <span>{{ t('take_photo') }}</span>
+                    </h3>
+                    <button class="btn-primary" onclick="openCamera()" id="openCameraBtn" style="width: 100%; margin-bottom: 16px;">
+                        <span>📷</span>
+                        <span>Open Camera</span>
+                    </button>
+                    <p style="font-size: 0.9rem; color: var(--text-light); text-align: center; margin: 0;">
+                        Click to capture a photo directly from your device
+                    </p>
+                </div>
+            </div>
+
+            <!-- Camera Container (Hidden by default) -->
+            <div class="camera-container" id="cameraContainer">
+                <div class="camera-instructions">{{ t('camera_instructions') }}</div>
+                <div class="viewfinder"></div>
+                <video id="video" autoplay playsinline></video>
+                <div class="camera-controls">
+                    <button class="camera-btn btn-switch" id="switchCameraBtn" onclick="switchCamera()">
+                        <span>🔄</span>
+                        <span>{{ t('switch_camera') }}</span>
+                    </button>
+                    <button class="camera-btn btn-capture" id="captureBtn" onclick="capturePhoto()">
+                        <span>📸</span>
+                        <span>{{ t('capture_photo') }}</span>
+                    </button>
+                    <button class="camera-btn btn-retake" onclick="closeCamera()" style="background: rgba(255, 255, 255, 0.2); color: white;">
+                        <span>✕</span>
+                        <span>Close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Captured Photo Preview -->
+            <div class="captured-preview" id="capturedPreview" style="margin-top: 24px;">
+                <h3 style="color: var(--primary-green); margin-bottom: 16px;">Captured Photo</h3>
+                <img id="capturedImage" alt="Captured Photo" style="width: 100%; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 16px;">
+                <div style="display: flex; gap: 12px;">
+                    <button class="camera-btn btn-retake" onclick="retakePhoto()" style="flex: 1;">
+                        <span>↺</span>
+                        <span>{{ t('retake_photo') }}</span>
+                    </button>
+                    <button class="camera-btn btn-use" id="usePhotoBtn" onclick="useCapturedPhoto(this)" style="flex: 1;">
+                        <span>✓</span>
+                        <span>{{ t('use_this_photo') }}</span>
+                    </button>
+                </div>
+            </div>
+
+            <canvas id="canvas"></canvas>
+
+            <div class="instructions-section" style="margin-top: 32px; padding: 24px; background: var(--bg-offwhite); border-radius: var(--border-radius);">
+                <h3 style="color: var(--primary-green); margin-bottom: 16px;">📋 {{ t('instructions') }}</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 8px 0; display: flex; align-items: start; gap: 12px;">
+                        <span>✓</span>
+                        <span>{{ t('instruction1') }}</span>
+                    </li>
+                    <li style="padding: 8px 0; display: flex; align-items: start; gap: 12px;">
+                        <span>✓</span>
+                        <span>{{ t('instruction2') }}</span>
+                    </li>
+                    <li style="padding: 8px 0; display: flex; align-items: start; gap: 12px;">
+                        <span>✓</span>
+                        <span>{{ t('instruction3') }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStream = null;
+        let facingMode = 'environment'; // Start with back camera
+        let capturedImageData = null;
+
+        // Check if camera is supported
+        const isCameraSupported = navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+
+        function openCamera() {
+            const cameraContainer = document.getElementById('cameraContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (!isCameraSupported) {
+                showError('{{ t("camera_not_supported") }}');
+                return;
+            }
+            
+            errorMessage.classList.remove('active');
+            cameraContainer.classList.add('active');
+            cameraContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            startCamera();
+        }
+
+        function closeCamera() {
+            const cameraContainer = document.getElementById('cameraContainer');
+            const capturedPreview = document.getElementById('capturedPreview');
+            
+            cameraContainer.classList.remove('active');
+            capturedPreview.classList.remove('active');
+            stopCamera();
+            capturedImageData = null;
+        }
+
+        function validateUploadForm(event) {
+            const fileInput = document.getElementById('file');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                event.preventDefault();
+                showError('Please select an image file to upload.');
+                return false;
+            }
+
+            // Show loading state
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="loading"></span> Processing...';
+            submitBtn.disabled = true;
+
+            // Form will submit normally
+            return true;
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('video');
+            const errorMessage = document.getElementById('errorMessage');
+
+            try {
+                // Stop existing stream if any
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+
+                const constraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+                errorMessage.classList.remove('active');
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    showError('{{ t("camera_permission_denied") }}');
+                } else {
+                    showError('{{ t("camera_not_supported") }}');
+                }
+            }
+        }
+
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            const video = document.getElementById('video');
+            if (video.srcObject) {
+                video.srcObject = null;
+            }
+        }
+
+        function switchCamera() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            startCamera();
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const capturedImage = document.getElementById('capturedImage');
+            const capturedPreview = document.getElementById('capturedPreview');
+            const cameraContainer = document.getElementById('cameraContainer');
+
+            if (!video.videoWidth || !video.videoHeight) {
+                return;
+            }
+
+            // Set canvas dimensions to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw video frame to canvas
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Get image data
+            capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
+            capturedImage.src = capturedImageData;
+
+            // Show shutter flash effect
+            const flash = document.getElementById('shutterFlash');
+            flash.classList.add('active');
+            setTimeout(() => {
+                flash.classList.remove('active');
+            }, 150);
+
+            // Hide camera, show preview
+            cameraContainer.classList.remove('active');
+            capturedPreview.classList.add('active');
+        }
+
+        function retakePhoto() {
+            const capturedPreview = document.getElementById('capturedPreview');
+            const cameraContainer = document.getElementById('cameraContainer');
+            
+            capturedPreview.classList.remove('active');
+            cameraContainer.classList.add('active');
+            capturedImageData = null;
+            // Restart camera
+            startCamera();
+        }
+
+        function useCapturedPhoto(button) {
+            if (!capturedImageData) {
+                return;
+            }
+
+            // Convert data URL to blob
+            fetch(capturedImageData)
+                .then(res => res.blob())
+                .then(blob => {
+                    // Create a File object from blob
+                    const file = new File([blob], 'captured-photo.jpg', { type: 'image/jpeg' });
+
+                    // Create a new FormData and append the file
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    // Get form action
+                    const form = document.getElementById('uploadForm');
+                    const formAction = form.action;
+
+                    // Show loading state
+                    const useBtn = button || document.getElementById('usePhotoBtn');
+                    const originalText = useBtn.innerHTML;
+                    useBtn.innerHTML = '<span class="loading"></span> Processing...';
+                    useBtn.disabled = true;
+                    
+                    // Submit via fetch
+                    fetch(formAction, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                        } else if (response.ok) {
+                            return response.text().then(html => {
+                                document.open();
+                                document.write(html);
+                                document.close();
+                            });
+                        } else {
+                            throw new Error('Upload failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting form:', error);
+                        showError('Error submitting photo. Please try again.');
+                        useBtn.innerHTML = originalText;
+                        useBtn.disabled = false;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error converting image:', error);
+                    showError('Error processing photo. Please try again.');
+                });
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+        }
+
+        // Clean up camera when page is unloaded
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
+
+        // Initialize: if camera method is not available, disable the button
+        if (!isCameraSupported) {
+            const openCameraBtn = document.getElementById('openCameraBtn');
+            if (openCameraBtn) {
+                openCameraBtn.disabled = true;
+                openCameraBtn.style.opacity = '0.5';
+                openCameraBtn.style.cursor = 'not-allowed';
+                openCameraBtn.title = 'Camera not supported on this device';
+            }
+        }
+
+        // Ensure camera container is hidden on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const cameraContainer = document.getElementById('cameraContainer');
+            if (cameraContainer) {
+                cameraContainer.classList.remove('active');
+            }
+        });
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const navbarLinks = document.getElementById('navbarLinks');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const body = document.body;
+            
+            navbarLinks.classList.toggle('active');
+            hamburgerBtn.classList.toggle('active');
+            
+            // Prevent body scroll when menu is open
+            if (navbarLinks.classList.contains('active')) {
+                body.classList.add('menu-open');
+            } else {
+                body.classList.remove('menu-open');
+            }
+        }
+
+        // Close mobile menu when clicking outside or on a link
+        document.addEventListener('click', function(event) {
+            const navbarLinks = document.getElementById('navbarLinks');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const navbar = document.querySelector('.navbar');
+            const body = document.body;
+            
+            if (window.innerWidth <= 991) {
+                // Close if clicking outside navbar
+                if (!navbar.contains(event.target) && navbarLinks.classList.contains('active')) {
+                    navbarLinks.classList.remove('active');
+                    hamburgerBtn.classList.remove('active');
+                    body.classList.remove('menu-open');
+                }
+                
+                // Close if clicking on a nav link
+                if (event.target.closest('.navbar-links a')) {
+                    setTimeout(() => {
+                        navbarLinks.classList.remove('active');
+                        hamburgerBtn.classList.remove('active');
+                        body.classList.remove('menu-open');
+                    }, 100);
+                }
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const navbarLinks = document.getElementById('navbarLinks');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const body = document.body;
+            
+            if (window.innerWidth > 991) {
+                navbarLinks.classList.remove('active');
+                hamburgerBtn.classList.remove('active');
+                body.classList.remove('menu-open');
+            }
+        });
+    </script>
 </body>
 </html>
